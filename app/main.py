@@ -5,7 +5,7 @@ import time
 import threading
 import json
 import save_app
-import casino
+import random
 
 class App(ctk.CTk):
     def __init__(self):
@@ -42,6 +42,40 @@ class App(ctk.CTk):
         self.detected_app = ""
         self.detected_app_list = []
 
+
+        self.outcomes = [
+            ("🎯", "Extra Focus Points!", "give_points"),
+            ("💡", "Productivity Tip!", "show_tip"),
+            ("😳", "Dare Time!", "show_dare"),
+            ("💀", "All Points Lost!", "lose_all_points")
+        ]
+
+        self.tips = [
+            "Take a 5-minute break every 25 minutes (Pomodoro Technique)",
+            "Use the 2-minute rule: if a task takes less than 2 minutes, do it now",
+            "Start your day with the most important task",
+            "Use the Eisenhower Matrix to prioritize tasks",
+            "Practice deep work: focus on one task for 90 minutes",
+            "Use the 80/20 rule: focus on the 20% of tasks that yield 80% of results",
+            "Create a 'not-to-do' list to avoid distractions",
+            "Use the 'eat the frog' method: tackle your hardest task first",
+            "Batch similar tasks together",
+            "Use the 'touch it once' rule: handle each task only once"
+        ]
+
+        self.dares = [
+            "Text your mom you love her. No context.",
+            "Post 'I love productivity!' on your social media",
+            "Send a voice message to a friend saying 'I'm being productive!'",
+            "Take a selfie with your most productive face and send it to a friend",
+            "Record yourself doing a productivity dance and send it to a friend",
+            "Call a friend and tell them about your productivity goals",
+            "Post a screenshot of your current task on social media",
+            "Send a motivational quote to 3 friends",
+            "Record yourself saying 'I am a productivity machine!' and send it to a friend",
+            "Take a video of yourself organizing your workspace and send it to a friend"
+        ]
+
         # Set initial appearance
         ctk.set_appearance_mode(self._dummy_appearance_mode)
         ctk.set_default_color_theme(self._dummy_color_theme)
@@ -53,8 +87,6 @@ class App(ctk.CTk):
         # Add tabs
         self.dashboard_tab = self.tabview.add("Dashboard")
         self.app_management_tab = self.tabview.add("App Management")
-        self.point_redemption_tab = self.tabview.add("Point Redemption")
-        self.settings_tab = self.tabview.add("Settings")
         self.mini_game_tab = self.tabview.add("Mini Game")
 
         # Set default tab
@@ -63,8 +95,6 @@ class App(ctk.CTk):
         # Create all tabs
         self.create_dashboard_tab()
         self.create_app_management_tab()
-        self.create_point_redemption_tab()
-        self.create_settings_tab()
         self.create_mini_game_tab()
 
         # Start background thread
@@ -141,7 +171,7 @@ class App(ctk.CTk):
         while True:
             time.sleep(1)
             self.detected_app = tracker.get_active_app()
-            if self.detected_app:
+            if (self.detected_app) and (self.detected_app != "python.exe"):
                 self.detected_app_list.append(self.detected_app)
                 # Update the textbox from the main thread
                 self.after(0, self.update_active_app)
@@ -295,195 +325,136 @@ class App(ctk.CTk):
 
         self.refresh_app_lists()
 
-    def update_redeem_time_display(self, event=None):
-        """Calculates and updates the displayed entertainment time based on entered points."""
-        try:
-            points_to_redeem = int(self.redeem_points_entry.get())
-            if points_to_redeem < 0:
-                self.redeem_time_display_label.configure(text="Points must be positive.")
-                return
-
-            if self._dummy_points_per_minute_entertainment > 0:
-                minutes = points_to_redeem / self._dummy_points_per_minute_entertainment
-                self.redeem_time_display_label.configure(text=f"Equals: {minutes:.1f} minutes")
-            else:
-                self.redeem_time_display_label.configure(text="Conversion rate not set.")
-        except ValueError:
-            self.redeem_time_display_label.configure(text="Enter a valid number.")
-
-    def perform_dummy_redemption(self):
-        """Simulates the redemption process without actual point deduction."""
-        try:
-            points_to_redeem = int(self.redeem_points_entry.get())
-        except ValueError:
-            messagebox.showwarning("Input Error", "Please enter a valid number of points to redeem.")
-            return
-
-        if points_to_redeem <= 0:
-            messagebox.showwarning("Input Error", "Points to redeem must be greater than zero.")
-            return
-
-        if points_to_redeem > self._dummy_current_points:
-            messagebox.showwarning("Not Enough Points", f"You only have {self._dummy_current_points} points. You need {points_to_redeem} points.")
-            self.redemption_status_label.configure(text="Not enough points!", text_color="red")
-            return
-
-        redeemable_minutes = points_to_redeem / self._dummy_points_per_minute_entertainment
-        messagebox.showinfo("Redemption Simulated", f"Successfully simulated redeeming {points_to_redeem} points for {redeemable_minutes:.1f} minutes of entertainment!")
-        self.redemption_status_label.configure(text=f"Simulated! {points_to_redeem} pts redeemed.", text_color="green")
-        self.redeem_points_entry.delete(0, "end")
-
-    def create_point_redemption_tab(self):
-        """Populates the Point Redemption tab with GUI elements."""
-        self.point_redemption_tab.columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(self.point_redemption_tab, text="Redeem Your Focus Points", 
-                    font=ctk.CTkFont(size=20, weight="bold")).pack(pady=20)
-
-        # Display current points
-        redeem_current_points_frame = ctk.CTkFrame(self.point_redemption_tab)
-        redeem_current_points_frame.pack(pady=10, padx=20, fill="x")
-        redeem_current_points_frame.columnconfigure(0, weight=1)
-        ctk.CTkLabel(redeem_current_points_frame, text="Your Current Points:", 
-                    font=ctk.CTkFont(size=16)).grid(row=0, column=0, sticky="w", padx=20, pady=5)
-        ctk.CTkLabel(redeem_current_points_frame, text=str(self._dummy_current_points), 
-                    font=ctk.CTkFont(size=28, weight="bold"), text_color="#FFD700").grid(row=0, column=1, sticky="e", padx=20, pady=5)
-
-        # Redemption input section
-        input_frame = ctk.CTkFrame(self.point_redemption_tab)
-        input_frame.pack(pady=20, padx=20, fill="x")
-        input_frame.columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(input_frame, text="Points to Redeem:", 
-                    font=ctk.CTkFont(size=14)).pack(pady=(10, 0), padx=20, anchor="w")
-        self.redeem_points_entry = ctk.CTkEntry(input_frame, placeholder_text="Enter points (e.g., 100)")
-        self.redeem_points_entry.pack(pady=(0, 10), padx=20, fill="x")
-        self.redeem_points_entry.bind("<KeyRelease>", self.update_redeem_time_display)
-
-        # Display conversion
-        ctk.CTkLabel(input_frame, text=f"Conversion Rate: {int(self._dummy_points_per_minute_entertainment)} points = 1 minute", 
-                    font=ctk.CTkFont(size=12, slant="italic")).pack(pady=(0, 5), padx=20, anchor="w")
-        self.redeem_time_display_label = ctk.CTkLabel(input_frame, text="Equals: 0.0 minutes", 
-                                                     font=ctk.CTkFont(size=18, weight="bold"), text_color="cyan")
-        self.redeem_time_display_label.pack(pady=(0, 10), padx=20)
-
-        redeem_button = ctk.CTkButton(input_frame, text="Redeem Points", 
-                                     font=ctk.CTkFont(size=16, weight="bold"), 
-                                     command=self.perform_dummy_redemption)
-        redeem_button.pack(pady=(10, 20), padx=20, fill="x")
-
-        # Status message label
-        self.redemption_status_label = ctk.CTkLabel(self.point_redemption_tab, text="", 
-                                                   font=ctk.CTkFont(size=14, weight="bold"))
-        self.redemption_status_label.pack(pady=(0, 20), padx=20)
-
-    def save_settings_gui(self):
-        """Reads values from settings GUI elements and simulates saving them."""
-        # Validate and "save" point conversion settings
-        try:
-            new_prod_pts = int(self.productive_points_per_min_entry.get())
-            new_ent_pts = int(self.entertainment_points_per_min_entry.get())
-            if new_prod_pts < 0 or new_ent_pts < 0:
-                messagebox.showwarning("Input Error", "Point values must be non-negative integers.")
-                return
-            self._dummy_productive_points_per_minute = new_prod_pts
-            self._dummy_entertainment_points_per_minute = new_ent_pts
-            print(f"Dummy Saved: Productive Points/Min: {new_prod_pts}, Entertainment Points/Min: {new_ent_pts}")
-        except ValueError:
-            messagebox.showwarning("Input Error", "Productivity/Entertainment points must be valid numbers.")
-            return
-
-        # Validate and "save" monitoring interval
-        try:
-            new_interval = int(self.monitoring_interval_entry.get())
-            if new_interval <= 0:
-                messagebox.showwarning("Input Error", "Monitoring interval must be a positive integer.")
-                return
-            self._dummy_monitoring_interval_seconds = new_interval
-            print(f"Dummy Saved: Monitoring Interval: {new_interval} seconds")
-        except ValueError:
-            messagebox.showwarning("Input Error", "Monitoring interval must be a valid number.")
-            return
-
-        # "Save" startup behavior
-        self._dummy_start_on_startup = bool(self.startup_checkbox.get())
-        print(f"Dummy Saved: Start on Startup: {self._dummy_start_on_startup}")
-
-        # Apply and "save" appearance mode and color theme
-        new_appearance_mode = self.appearance_mode_optionmenu.get()
-        new_color_theme = self.color_theme_optionmenu.get()
-
-        ctk.set_appearance_mode(new_appearance_mode)
-        ctk.set_default_color_theme(new_color_theme)
-        self._dummy_appearance_mode = new_appearance_mode
-        self._dummy_color_theme = new_color_theme
-        print(f"Applied and Dummy Saved: Appearance Mode: {new_appearance_mode}, Color Theme: {new_color_theme}")
-
-        messagebox.showinfo("Settings Saved (Dummy)", "Settings have been updated! (Changes are not persistent yet)")
-
-    def create_settings_tab(self):
-        """Populates the Settings tab with GUI elements."""
-        self.settings_tab.columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(self.settings_tab, text="Application Settings", 
-                    font=ctk.CTkFont(size=20, weight="bold")).pack(pady=20)
-
-        settings_frame = ctk.CTkFrame(self.settings_tab)
-        settings_frame.pack(pady=10, padx=20, fill="x", expand=False)
-        settings_frame.columnconfigure(0, weight=1)
-        settings_frame.columnconfigure(1, weight=1)
-
-        # Point Conversion Settings
-        ctk.CTkLabel(settings_frame, text="Productivity Points per Minute:", 
-                    font=ctk.CTkFont(size=14)).grid(row=0, column=0, pady=5, padx=20, sticky="w")
-        self.productive_points_per_min_entry = ctk.CTkEntry(settings_frame, placeholder_text="e.g., 1")
-        self.productive_points_per_min_entry.grid(row=0, column=1, pady=5, padx=20, sticky="ew")
-        self.productive_points_per_min_entry.insert(0, str(self._dummy_productive_points_per_minute))
-
-        ctk.CTkLabel(settings_frame, text="Entertainment Points per Minute:", 
-                    font=ctk.CTkFont(size=14)).grid(row=1, column=0, pady=5, padx=20, sticky="w")
-        self.entertainment_points_per_min_entry = ctk.CTkEntry(settings_frame, placeholder_text="e.g., 0")
-        self.entertainment_points_per_min_entry.grid(row=1, column=1, pady=5, padx=20, sticky="ew")
-        self.entertainment_points_per_min_entry.insert(0, str(self._dummy_entertainment_points_per_minute))
-
-        # Monitoring Interval Setting
-        ctk.CTkLabel(settings_frame, text="Monitoring Interval (seconds):", 
-                    font=ctk.CTkFont(size=14)).grid(row=2, column=0, pady=5, padx=20, sticky="w")
-        self.monitoring_interval_entry = ctk.CTkEntry(settings_frame, placeholder_text="e.g., 5")
-        self.monitoring_interval_entry.grid(row=2, column=1, pady=5, padx=20, sticky="ew")
-        self.monitoring_interval_entry.insert(0, str(self._dummy_monitoring_interval_seconds))
-
-        # Start on Startup Setting
-        self.startup_checkbox = ctk.CTkCheckBox(settings_frame, text="Start monitoring on application launch", 
-                                               font=ctk.CTkFont(size=14))
-        self.startup_checkbox.grid(row=3, column=0, columnspan=2, pady=15, padx=20, sticky="w")
-        if self._dummy_start_on_startup:
-            self.startup_checkbox.select()
-
-        # Appearance Settings
-        ctk.CTkLabel(settings_frame, text="Appearance Mode:", 
-                    font=ctk.CTkFont(size=14)).grid(row=4, column=0, pady=5, padx=20, sticky="w")
-        self.appearance_mode_optionmenu = ctk.CTkOptionMenu(settings_frame, values=["System", "Light", "Dark"],
-                                                           command=ctk.set_appearance_mode)
-        self.appearance_mode_optionmenu.grid(row=4, column=1, pady=5, padx=20, sticky="ew")
-        self.appearance_mode_optionmenu.set(self._dummy_appearance_mode)
-
-        ctk.CTkLabel(settings_frame, text="Color Theme:", 
-                    font=ctk.CTkFont(size=14)).grid(row=5, column=0, pady=5, padx=20, sticky="w")
-        self.color_theme_optionmenu = ctk.CTkOptionMenu(settings_frame, values=["blue", "dark-blue", "green"],
-                                                       command=ctk.set_default_color_theme)
-        self.color_theme_optionmenu.grid(row=5, column=1, pady=5, padx=20, sticky="ew")
-        self.color_theme_optionmenu.set(self._dummy_color_theme)
-
-        # Save Settings Button
-        save_button = ctk.CTkButton(self.settings_tab, text="Save Settings", 
-                                   font=ctk.CTkFont(size=16, weight="bold"), 
-                                   command=self.save_settings_gui)
-        save_button.pack(pady=30, padx=20, fill="x")
-
     def create_mini_game_tab(self):
-        """Creates placeholder content for the Mini Game tab."""
-        ctk.CTkLabel(self.mini_game_tab, text="Welcome to the Mini Game Casino!").pack(pady=20, padx=20)
+        frame = ctk.CTkFrame(self.mini_game_tab)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+        label = ctk.CTkLabel(frame, text="Mini Game: Gamble Your Productivity Points!",
+                             font=ctk.CTkFont(size=20, weight="bold"))
+        label.pack(pady=20)
+
+        launch_casino_button = ctk.CTkButton(
+            frame, text="Launch Casino", command=self.open_casino_window,
+            font=ctk.CTkFont(size=16, weight="bold"),
+            fg_color="#1ABC9C", hover_color="#16A085"
+        )
+        launch_casino_button.pack(pady=10)
+
+    def open_casino_window(self):
+        self.casino_window = ctk.CTkToplevel(self)
+        self.casino_window.title("Gamble Your Points Casino")
+        self.casino_window.geometry("400x500")
+        self.casino_window.configure(bg="#2C3E50")
+        self.casino_window.transient(self)
+        self.casino_window.grab_set()
+
+        self.casino_points_label = ctk.CTkLabel(self.casino_window,
+                                                text=f"Current Points: {self._dummy_current_points}",
+                                                text_color="white",
+                                                font=ctk.CTkFont(size=18, weight="bold"))
+        self.casino_points_label.pack(pady=20)
+
+        self.slot_frame = ctk.CTkFrame(self.casino_window, fg_color="#2C3E50")
+        self.slot_frame.pack(pady=20)
+
+        self.slots = []
+        for _ in range(3):
+            slot = ctk.CTkLabel(self.slot_frame, text="?", font=ctk.CTkFont(size=32, weight="bold"),
+                                width=50, text_color="white")
+            slot.pack(side="left", padx=10)
+            self.slots.append(slot)
+
+        self.spin_button = ctk.CTkButton(
+            self.casino_window, text="SPIN! (Costs 10 points)", command=self.spin,
+            font=ctk.CTkFont(size=16, weight="bold"),
+            fg_color="#1ABC9C", hover_color="#16A085"
+        )
+        self.spin_button.pack(pady=20)
+
+        self.result_label = ctk.CTkLabel(self.casino_window, text="", wraplength=350, justify="center",
+                                        text_color="white", font=ctk.CTkFont(size=14))
+        self.result_label.pack(pady=20)
+
+        self.update_spin_button()
+
+
+    def spin(self):
+        if self._dummy_current_points >= 10:
+            # Deduct points immediately
+            self.deduct_points(10)
+            self.update_points_display()
+
+            # Disable spin button while spinning
+            self.spin_button.configure(state='disabled')
+            self.animate_slots()
+
+
+    def animate_slots(self, iteration=0):
+        if iteration < 20:
+            for slot in self.slots:
+                outcome = random.choice(self.outcomes)
+                slot.configure(text=outcome[0])
+            self.after(100, lambda: self.animate_slots(iteration + 1))
+        else:
+            # Select final outcome
+            final_outcome = random.choice(self.outcomes)
+            for slot in self.slots:
+                slot.configure(text=final_outcome[0])
+            self.result_label.configure(text=final_outcome[1])
+
+            # Apply the outcome effect
+            getattr(self, final_outcome[2])()
+
+            # Update points display and spin button state after outcome is applied
+            self.update_points_display()
+            self.update_spin_button()
+
+    def update_spin_button(self):
+        if self._dummy_current_points < 10:
+            self.spin_button.configure(state='disabled')
+        else:
+            self.spin_button.configure(state='normal')
+
+
+    # Outcome handlers (cleaned, no button state management inside these)
+    def give_points(self):
+        points = random.randint(20, 50)
+        self.add_points(points)
+        self.result_label.configure(text=f"{self.result_label.cget('text')}\nYou won {points} points!")
+
+
+    def show_tip(self):
+        tip = random.choice(self.tips)
+        self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nProductivity Tip:\n{tip}")
+
+
+    def show_dare(self):
+        dare = random.choice(self.dares)
+        self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nYour Dare:\n{dare}")
+
+
+    def lose_all_points(self):
+        points_lost = self._dummy_current_points
+        self._dummy_current_points = 0
+        self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nYou lost all {points_lost} points!")
+
+
+    # Points utility functions
+    def add_points(self, amount):
+        self._dummy_current_points += amount
+
+
+    def deduct_points(self, amount):
+        self._dummy_current_points = max(0, self._dummy_current_points - amount)
+
+    def update_points_display(self):
+        self.points_label.configure(text=self._dummy_current_points)
+        if hasattr(self, 'casino_points_label'):
+            self.casino_points_label.configure(text=f"Current Points: {self._dummy_current_points}")
+        new_data = {"points": self._dummy_current_points}
+        with open("points.json", 'w') as file:
+            json.dump(new_data, file, indent=4)
+
 
 if __name__ == "__main__":
     app = App()

@@ -20,9 +20,9 @@ def check_app(app_name):
     with open('points.json', 'r') as file:
         data = json.load(file)
 
-    if category == "You are using a productive app/website.":
+    if category == "Productive":
         data['points'] += 1  # Add 1 point
-    elif category == "You are using an entertainment app/website.":
+    elif category == "Entertainment":
         if data['points'] <= 0:
             blocker.show_popup("Reminder!", "GET BACK TO WORKK!!")
         else:

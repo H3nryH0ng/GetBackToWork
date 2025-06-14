@@ -1,10 +1,23 @@
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk
 import random
-import time
-from typing import Callable, List, Tuple
+from typing import Callable
 
-class CasinoWindow(tk.Toplevel):
+# --- Point System Class ---
+class PointSystem:
+    def __init__(self, initial_points=100):
+        self.points = initial_points
+
+    def get_points(self):
+        return self.points
+
+    def add_points(self, amount):
+        self.points += amount
+
+    def deduct_points(self, amount):
+        self.points = max(0, self.points - amount)
+
+# --- Casino Window Class ---
+class CasinoWindow(ctk.CTkToplevel):
     def __init__(self, parent, point_system, on_points_update: Callable[[int], None]):
         super().__init__(parent)
         self.point_system = point_system
@@ -19,58 +32,52 @@ class CasinoWindow(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
 
-        # Current points
-        self.points_label = ttk.Label(
+        # Current points label
+        self.points_label = ctk.CTkLabel(
             self,
             text=f"Current Points: {point_system.get_points()}",
-            style='Casino.TLabel'
+            text_color="white",
+            font=ctk.CTkFont(size=18, weight="bold")
         )
         self.points_label.pack(pady=20)
 
         # Slot machine display
-        self.slot_frame = ttk.Frame(self, style='Casino.TFrame')
+        self.slot_frame = ctk.CTkFrame(self, fg_color="#2C3E50")
         self.slot_frame.pack(pady=20)
 
         self.slots = []
         for i in range(3):
-            slot = ttk.Label(
+            slot = ctk.CTkLabel(
                 self.slot_frame,
                 text="?",
-                font=('Arial', 24, 'bold'),
-                width=3,
-                style='Casino.TLabel'
+                font=ctk.CTkFont(size=32, weight="bold"),
+                width=50,
+                text_color="white"
             )
-            slot.pack(side=tk.LEFT, padx=10)
+            slot.pack(side="left", padx=10)
             self.slots.append(slot)
 
         # Spin button
-        self.spin_button = ttk.Button(
+        self.spin_button = ctk.CTkButton(
             self,
             text="SPIN! (Costs 10 points)",
             command=self.spin,
-            style='Casino.TButton'
+            font=ctk.CTkFont(size=16, weight="bold"),
+            fg_color="#1ABC9C",
+            hover_color="#16A085"
         )
         self.spin_button.pack(pady=20)
 
         # Result display
-        self.result_label = ttk.Label(
+        self.result_label = ctk.CTkLabel(
             self,
             text="",
             wraplength=350,
-            style='Casino.TLabel'
+            justify="center",
+            text_color="white",
+            font=ctk.CTkFont(size=14)
         )
         self.result_label.pack(pady=20)
-
-        # Configure styles
-        self.style = ttk.Style()
-        self.style.configure('Casino.TLabel',
-                           background='#2C3E50',
-                           foreground='white',
-                           font=('Arial', 12))
-        self.style.configure('Casino.TButton',
-                           font=('Arial', 12, 'bold'))
-        self.style.configure('Casino.TFrame',
-                           background='#2C3E50')
 
         # Possible outcomes
         self.outcomes = [
@@ -183,3 +190,16 @@ class CasinoWindow(tk.Toplevel):
         )
         self.on_points_update(self.point_system.get_points())
 
+if __name__ == "__main__":
+    ctk.set_appearance_mode("dark")  # Optional: "light", "dark", or "system"
+    ctk.set_default_color_theme("dark-blue")
+
+    root = ctk.CTk()
+
+    point_system = PointSystem()
+
+    def on_points_update(new_points):
+        print(f"Updated points: {new_points}")
+
+    app = CasinoWindow(root, point_system, on_points_update)
+    root.mainloop()
