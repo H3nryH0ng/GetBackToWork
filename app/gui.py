@@ -23,7 +23,11 @@ class App(ctk.CTk):
             data = json.load(file) # Use json.load() for file objects
             self._dummy_productivity_apps = data.get("productivity_app", [])
             self._dummy_entertainment_apps = data.get("entertainment_app", [])
-        self._dummy_current_points = 100
+
+        with open("points.json", 'r') as file:
+            points_data = json.load(file)
+            self._dummy_current_points = points_data.get("points", "")
+
         self._dummy_points_per_minute_entertainment = 2
         self._dummy_productive_points_per_minute = 1
         self._dummy_entertainment_points_per_minute = 0
@@ -135,6 +139,11 @@ class App(ctk.CTk):
                 # Update the textbox from the main thread
                 self.after(0, self.update_active_app)
                 self.category = tracker.check_app(self.detected_app)
+                with open("points.json", 'r') as file:
+                    points_data = json.load(file)
+                    self._dummy_current_points = points_data.get("points", "")
+                    self.points_label.configure(text=self._dummy_current_points)
+                
 
 
     def update_active_app(self):
