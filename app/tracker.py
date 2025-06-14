@@ -1,7 +1,6 @@
 import win32gui
 import win32process
 import psutil
-import time
 import app_classifier
 import json
 import blocker
@@ -17,7 +16,7 @@ def get_active_app():
             return process_name
         
 def check_app(app_name):
-    category = app_classifier.classify_app_or_website(app_name)
+    category = app_classifier.classify_app(app_name)
     with open('points.json', 'r') as file:
         data = json.load(file)
 
@@ -25,8 +24,7 @@ def check_app(app_name):
         data['points'] += 1  # Add 1 point
     elif category == "You are using an entertainment app/website.":
         if data['points'] <= 0:
-            root = tk.Tk()
-            blocker.show_popup(root, "Reminder!", "GET BACK TO WORKK!!")
+            blocker.show_popup("Reminder!", "GET BACK TO WORKK!!")
         else:
             data['points'] -= 1
     with open('points.json', 'w') as file:
@@ -34,5 +32,4 @@ def check_app(app_name):
         return category
 
 if __name__ == "__main__":
-    x = input("Enter the name of the app you want to check: ")
-    check_app(x)
+    check_app("steamwebhelper.exe")

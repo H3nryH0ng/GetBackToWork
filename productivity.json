@@ -1,25 +1,8 @@
 {
     "productivity_app": [
-        "word",
-        "excel",
-        "powerpoint",
-        "jira",
-        "slack",
-        "code",
-        "outlook",
-        "google docs",
-        "zoom"
+        "Code.exe"
     ],
     "entertainment_app": [
-        "netflix",
-        "youtube",
-        "game",
-        "spotify",
-        "facebook",
-        "tiktok",
-        "instagram",
-        "reddit",
-        "twitter",
-        "x (twitter)"
+        "steamwebhelper.exe"
     ]
 }

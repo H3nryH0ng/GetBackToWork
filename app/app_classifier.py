@@ -19,7 +19,7 @@ def _create_initial_json_file(file_path):
         # For now, we'll let the main function attempt to proceed, but it will likely fail
         # if the file couldn't be created.
 
-def classify_app_or_website(app_name, categories_file_path="productivity.json"):
+def classify_app(app_name, categories_file_path="productivity.json"):
     """
     Classifies an application or website name as 'Productive' or 'Entertainment'
     based on keywords found in a specified JSON file (e.g., productivity.json).
@@ -60,7 +60,7 @@ def classify_app_or_website(app_name, categories_file_path="productivity.json"):
         # After re-creation, the keywords will be empty. We should then recursively call
         # the function to re-attempt classification with the now empty but valid file.
         # This will result in an "unclassified" message for the current app.
-        return classify_app_or_website(app_name, categories_file_path)
+        return classify_app(app_name, categories_file_path)
     except Exception as e:
         return f"An unexpected error occurred while reading or processing '{categories_file_path}': {e}"
 
@@ -82,28 +82,31 @@ def classify_app_or_website(app_name, categories_file_path="productivity.json"):
 
 # --- Example Usage ---
 if __name__ == "__main__":
-    print("--- App/Website Classifier ---")
+    # print("--- App/Website Classifier ---")
 
-    # Define the path to the categories file
-    categories_file = "productivity.json"
+    # # Define the path to the categories file
+    # categories_file = "productivity.json"
 
-    # Optional: Delete the file to test the creation functionality
-    # if os.path.exists(categories_file):
-    #     os.remove(categories_file)
-    #     print(f"Deleted {categories_file} for testing purposes.")
+    # # Optional: Delete the file to test the creation functionality
+    # # if os.path.exists(categories_file):
+    # #     os.remove(categories_file)
+    # #     print(f"Deleted {categories_file} for testing purposes.")
 
-    # Check and create the JSON file if it doesn't exist, *before* user input
-    if not os.path.exists(categories_file):
-        _create_initial_json_file(categories_file)
-    # Also check if it's empty after existing, and re-initialize if so
-    elif os.path.getsize(categories_file) == 0:
-        print(f"Warning: '{categories_file}' is empty. Initializing its content.")
-        _create_initial_json_file(categories_file)
+    # # Check and create the JSON file if it doesn't exist, *before* user input
+    # if not os.path.exists(categories_file):
+    #     _create_initial_json_file(categories_file)
+    # # Also check if it's empty after existing, and re-initialize if so
+    # elif os.path.getsize(categories_file) == 0:
+    #     print(f"Warning: '{categories_file}' is empty. Initializing its content.")
+    #     _create_initial_json_file(categories_file)
 
 
-    # Get the app/website name from the user
-    user_input_app_name = input("Enter the app/website name (e.g., 'Netflix', 'Google Docs', 'Jira', 'VS Code'): ")
+    # # Get the app/website name from the user
+    # user_input_app_name = input("Enter the app/website name (e.g., 'Netflix', 'Google Docs', 'Jira', 'VS Code'): ")
 
-    # Classify the app/website
-    classification_result = classify_app_or_website(user_input_app_name, categories_file)
-    print(classification_result)
+    # # Classify the app/website
+    # classification_result = classify_app_or_website(user_input_app_name, categories_file)
+    # print(classification_result)
+
+
+    pass

@@ -122,29 +122,4 @@ def remove_app_from_entertainment(app_name: str):
             print(f"'{app_name}' not found in entertainment apps.")
     else:
         print("No entertainment apps found to remove.")
-# --- Example Usage ---
-# Ensure productivity.json is empty or doesn't exist for a clean start
-# if os.path.exists("productivity.json"):
-#     os.remove("productivity.json")
-
-# print("--- Adding Productivity Apps ---")
-# save_app_to_productivity("VS Code")
-# save_app_to_productivity("Google Chrome")
-# save_app_to_productivity("Jira")
-# save_app_to_productivity("Google Chrome") # This won't add a duplicate
-
-# print("\n--- Adding Entertainment Apps ---")
-# save_app_to_entertainment("YouTube")
-# save_app_to_entertainment("Netflix")
-# save_app_to_entertainment("Spotify")
-# save_app_to_entertainment("YouTube") # This won't add a duplicate
-
-# remove_app_from_productivity("Google Chrome") # Remove an app from productivity
-# remove_app_from_productivity("Jira")
-print("\n--- Current productivity.json content ---")
-try:
-    with open("productivity.json", 'r', encoding='utf-8') as f:
-        print(json.dumps(json.load(f), indent=4))
-except FileNotFoundError:
-    print("productivity.json not found.")
 
