@@ -11,9 +11,6 @@ def get_active_app():
         if process.info['pid'] == pid:
             process_name = process.info['name']
             return process_name
-        
-def check_app(app):
-    pass
 
 if __name__ == "__main__":
     while True:
