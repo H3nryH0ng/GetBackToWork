@@ -70,15 +70,15 @@ def classify_app_or_website(app_name, categories_file_path="productivity.json"):
     # Check if the app name contains any productive keywords
     for keyword in productive_keywords:
         if keyword in app_name_lower:
-            return f"'{app_name}' is a productive app/website."
+            return f"You are using a productive app/website."
 
     # Check if the app name contains any entertainment keywords
     for keyword in entertainment_keywords:
         if keyword in app_name_lower:
-            return f"'{app_name}' is an entertainment app/website."
+            return f"You are using an entertainment app/website."
 
     # If no match is found in either category
-    return f"'{app_name}' could not be classified. It's not listed in the provided categories."
+    return f"The app could not be classified. It's not listed in the provided categories."
 
 # --- Example Usage ---
 if __name__ == "__main__":
