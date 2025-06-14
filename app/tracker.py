@@ -4,6 +4,8 @@ import psutil
 import time
 import app_classifier
 import json
+import blocker
+import tkinter as tk
 
 def get_active_app():
     handle = win32gui.GetForegroundWindow()
@@ -22,7 +24,11 @@ def check_app(app_name):
     if category == "You are using a productive app/website.":
         data['points'] += 1  # Add 1 point
     elif category == "You are using an entertainment app/website.":
-        data['points'] -= 1
+        if data['points'] <= 0:
+            root = tk.Tk()
+            blocker.show_popup(root, "Reminder!", "GET BACK TO WORKK!!")
+        else:
+            data['points'] -= 1
     with open('points.json', 'w') as file:
         json.dump(data, file, indent=2)
         return category

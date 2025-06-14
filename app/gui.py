@@ -78,56 +78,27 @@ class App(ctk.CTk):
 
     def create_dashboard_tab(self):
         """Populates the Dashboard tab with suggested GUI elements."""
+
         self.dashboard_tab.columnconfigure(0, weight=1)
 
         # Current Points Balance
         self.points_frame = ctk.CTkFrame(self.dashboard_tab)
-        self.points_frame.pack(pady=(20, 10), padx=20, fill="x")
-        self.points_frame.columnconfigure(0, weight=1)
+        self.points_frame.grid(row=0, column=0)
 
-        ctk.CTkLabel(self.points_frame, text="Current Focus Points:", 
-                    font=ctk.CTkFont(size=16, weight="bold")).grid(row=0, column=0, pady=(10, 0), padx=20, sticky="w")
+        self.points_text_label = ctk.CTkLabel(self.points_frame, text="Current Focus Points", font=ctk.CTkFont(size=25, weight="bold"))
+        self.points_text_label.grid(row=0, column=0)
         
-        self.points_label = ctk.CTkLabel(self.points_frame, text=str(self._dummy_current_points),
-                                        font=ctk.CTkFont(size=48, weight="bold"), text_color="#FFD700")
-        self.points_label.grid(row=1, column=0, pady=(0, 10), padx=20, sticky="ew")
+        self.points_label = ctk.CTkLabel(self.points_frame, text=str(self._dummy_current_points),font=ctk.CTkFont(size=48, weight="bold"))
+        self.points_label.grid(row=1, column=0)
 
-        # Detected apps textbox
-        self.detected_apps_TB = ctk.CTkTextbox(self.dashboard_tab, height=100, width=400, state="disabled")
-        self.detected_apps_TB.pack()
+        self.detected_app_frame = ctk.CTkFrame(self.dashboard_tab, fg_color="grey")
+        self.detected_app_frame.grid(row=1, column=0)
 
-        # Monitoring Status Indicator
-        status_frame = ctk.CTkFrame(self.dashboard_tab)
-        status_frame.pack(pady=10, padx=20, fill="x")
-        status_frame.columnconfigure(0, weight=1)
-        status_frame.columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(status_frame, text="Monitoring Status:", 
-                    font=ctk.CTkFont(size=14)).grid(row=0, column=0, pady=5, padx=20, sticky="w")
-        self.status_indicator_label = ctk.CTkLabel(status_frame, text="Inactive", 
-                                                  font=ctk.CTkFont(size=14, weight="bold"), text_color="red")
-        self.status_indicator_label.grid(row=0, column=1, pady=5, padx=20, sticky="e")
-
-        # Session Productivity/Entertainment Time
-        time_summary_frame = ctk.CTkFrame(self.dashboard_tab)
-        time_summary_frame.pack(pady=10, padx=20, fill="x")
-        time_summary_frame.columnconfigure(0, weight=1)
-        time_summary_frame.columnconfigure(1, weight=1)
-
-        ctk.CTkLabel(time_summary_frame, text="Productive Time (Session):", 
-                    font=ctk.CTkFont(size=14)).grid(row=0, column=0, pady=5, padx=10, sticky="w")
-        self.productive_time_label = ctk.CTkLabel(time_summary_frame, text="00:00:00", 
-                                                 font=ctk.CTkFont(size=14, weight="bold"))
-        self.productive_time_label.grid(row=0, column=1, pady=5, padx=10, sticky="e")
-
-        ctk.CTkLabel(time_summary_frame, text="Entertainment Time (Session):", 
-                    font=ctk.CTkFont(size=14)).grid(row=1, column=0, pady=5, padx=10, sticky="w")
-        self.entertainment_time_label = ctk.CTkLabel(time_summary_frame, text="00:00:00", 
-                                                    font=ctk.CTkFont(size=14, weight="bold"))
-        self.entertainment_time_label.grid(row=1, column=1, pady=5, padx=10, sticky="e")
+        self.detected_apps_TB = ctk.CTkTextbox(self.detected_app_frame, height=100, width=400, state="disabled")
+        self.detected_apps_TB.grid(row=1, column=0)
 
         self.category_label = ctk.CTkLabel(self.dashboard_tab, text="Detected App Category: Unclassified")
-        self.category_label.pack()
+        self.category_label.grid()
 
     def update_active_app_TB(self):
         """Updates the detected apps textbox with current active app."""

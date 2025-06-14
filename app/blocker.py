@@ -6,6 +6,7 @@ from PIL import Image, ImageTk # Import Pillow components for image handling
 import io # Import io to handle image data if needed, but not for file path
 import os # Import os for file path checking
 
+
 # --- IMPORTANT: Configure your image file path here ---
 # The path has been updated to your specified GIF image file.
 # Make sure 'get-back-to-work.gif' is in the same directory as this Python script.
@@ -115,21 +116,10 @@ def _show_and_reschedule(parent_root: tk.Tk, interval_seconds: int):
 
 # --- Main Execution Block ---
 if __name__ == "__main__":
-    print("Welcome to the Pure Continuous Popup Program!")
-    print("\n--- Setup Guide for Custom Image ---")
-    print("1. **Install 'Pillow'**: If you haven't, open your terminal and run: `pip install Pillow`")
-    print(f"2. **Place your GIF image file**: Put your image file ('get-back-to-work.gif') in the SAME directory as this Python script.")
-    print(f"3. **Update the path**: The `CUSTOM_POPUP_IMAGE_PATH` variable has already been updated to 'get-back-to-work.gif'.")
-    print("\n--- Disclaimer ---")
-    print("This program runs continuously and displays a pop-up reminder at regular intervals.")
-    print("It does NOT detect any specific applications, classify them, or interact with files.")
-    print("The pop-up will appear repeatedly and can be intrusive.")
-    print("Close the Python terminal or press Ctrl+C to stop the monitor.")
-    print("-----------------------------------")
 
     root = tk.Tk()
-    root.withdraw()
+    root.withdraw() # Popup every 2 seconds
+    show_popup(root, "Reminder!", "GET BACK TO WORKK!!")
 
-    run_continuous_popup_monitor(root, interval_seconds=2) # Popup every 2 seconds
 
     root.mainloop()
