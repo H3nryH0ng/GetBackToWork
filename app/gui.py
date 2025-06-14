@@ -5,6 +5,7 @@ import time
 import threading
 import json
 import save_app
+import casino
 
 class App(ctk.CTk):
     def __init__(self):
@@ -80,25 +81,60 @@ class App(ctk.CTk):
         """Populates the Dashboard tab with suggested GUI elements."""
 
         self.dashboard_tab.columnconfigure(0, weight=1)
+        self.dashboard_tab.rowconfigure(1, weight=1)
 
-        # Current Points Balance
-        self.points_frame = ctk.CTkFrame(self.dashboard_tab)
-        self.points_frame.grid(row=0, column=0)
+        # Current Points Balance - Hero Section
+        self.points_frame = ctk.CTkFrame(self.dashboard_tab, corner_radius=20, height=160)
+        self.points_frame.grid(row=0, column=0, sticky="ew", padx=40, pady=(40, 25))
+        self.points_frame.columnconfigure(0, weight=1)
+        self.points_frame.grid_propagate(False)
 
-        self.points_text_label = ctk.CTkLabel(self.points_frame, text="Current Focus Points", font=ctk.CTkFont(size=25, weight="bold"))
-        self.points_text_label.grid(row=0, column=0)
+        self.points_text_label = ctk.CTkLabel(self.points_frame, text="Current Focus Points", 
+                                            font=ctk.CTkFont(size=28, weight="bold"),
+                                            text_color=("gray10", "gray90"))
+        self.points_text_label.grid(row=0, column=0, pady=(30, 5))
         
-        self.points_label = ctk.CTkLabel(self.points_frame, text=str(self._dummy_current_points),font=ctk.CTkFont(size=48, weight="bold"))
-        self.points_label.grid(row=1, column=0)
+        self.points_label = ctk.CTkLabel(self.points_frame, text=str(self._dummy_current_points),
+                                    font=ctk.CTkFont(size=56, weight="bold"),
+                                    text_color=("#1f538d", "#4a9eff"))
+        self.points_label.grid(row=1, column=0, pady=(0, 30))
 
-        self.detected_app_frame = ctk.CTkFrame(self.dashboard_tab, fg_color="grey")
-        self.detected_app_frame.grid(row=1, column=0)
+        # App Detection Frame - Card Style
+        self.detected_app_frame = ctk.CTkFrame(self.dashboard_tab, 
+                                            fg_color=("gray92", "gray13"), 
+                                            corner_radius=20,
+                                            border_width=2,
+                                            border_color=("gray80", "gray25"))
+        self.detected_app_frame.grid(row=1, column=0, sticky="nsew", padx=40, pady=(0, 25))
+        self.detected_app_frame.columnconfigure(0, weight=1)
+        self.detected_app_frame.rowconfigure(1, weight=1)
 
-        self.detected_apps_TB = ctk.CTkTextbox(self.detected_app_frame, height=100, width=400, state="disabled")
-        self.detected_apps_TB.grid(row=1, column=0)
+        # Add a subtle header inside the frame
+        self.app_header = ctk.CTkLabel(self.detected_app_frame, 
+                                    text="🖥️ Active Application Monitor",
+                                    font=ctk.CTkFont(size=20, weight="bold"),
+                                    text_color=("gray20", "gray80"))
+        self.app_header.grid(row=0, column=0, pady=(25, 15), padx=25, sticky="w")
 
-        self.category_label = ctk.CTkLabel(self.dashboard_tab, text="Detected App Category: Unclassified")
-        self.category_label.grid()
+        self.detected_apps_TB = ctk.CTkTextbox(self.detected_app_frame, 
+                                            height=200, 
+                                            width=400, 
+                                            state="disabled",
+                                            corner_radius=12,
+                                            border_width=1,
+                                            border_color=("gray75", "gray30"),
+                                            font=ctk.CTkFont(size=13))
+        self.detected_apps_TB.grid(row=1, column=0, padx=25, pady=(0, 20), sticky="nsew")
+
+        # Category Label - Status Badge Style
+        self.category_label = ctk.CTkLabel(self.dashboard_tab, 
+                                        text="📊 Detected App Category: Unclassified",
+                                        font=ctk.CTkFont(size=18, weight="bold"),
+                                        fg_color=("orange", "darkorange"),
+                                        corner_radius=25,
+                                        height=50,
+                                        text_color="white")
+        self.category_label.grid(row=2, column=0, pady=(0, 40), padx=40, sticky="ew")
 
     def update_active_app_TB(self):
         """Updates the detected apps textbox with current active app."""
@@ -115,7 +151,6 @@ class App(ctk.CTk):
                     self._dummy_current_points = points_data.get("points", "")
                     self.points_label.configure(text=self._dummy_current_points)
                 
-
 
     def update_active_app(self):
         """Updates the textbox content - called from main thread."""
