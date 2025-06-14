@@ -3,6 +3,8 @@ from tkinter import messagebox
 import tracker
 import time
 import threading
+import json
+import save_app
 
 class App(ctk.CTk):
     def __init__(self):
@@ -17,8 +19,10 @@ class App(ctk.CTk):
         self.grid_columnconfigure(0, weight=1)
 
         # --- Initialize dummy data ---
-        self._dummy_productivity_apps = ["VS Code", "Notion", "Google Chrome (Work)"]
-        self._dummy_entertainment_apps = ["YouTube", "Netflix", "Steam"]
+        with open("productivity.json", 'r') as file:
+            data = json.load(file) # Use json.load() for file objects
+            self._dummy_productivity_apps = data.get("productivity_app", [])
+            self._dummy_entertainment_apps = data.get("entertainment_app", [])
         self._dummy_current_points = 100
         self._dummy_points_per_minute_entertainment = 2
         self._dummy_productive_points_per_minute = 1
@@ -27,6 +31,7 @@ class App(ctk.CTk):
         self._dummy_start_on_startup = False
         self._dummy_appearance_mode = "System"
         self._dummy_color_theme = "blue"
+        self.category = "Unclassified"
 
         # Initialize detected app variables
         self.detected_app = ""
@@ -117,6 +122,9 @@ class App(ctk.CTk):
                                                     font=ctk.CTkFont(size=14, weight="bold"))
         self.entertainment_time_label.grid(row=1, column=1, pady=5, padx=10, sticky="e")
 
+        self.category_label = ctk.CTkLabel(self.dashboard_tab, text="Detected App Category: Unclassified")
+        self.category_label.pack()
+
     def update_active_app_TB(self):
         """Updates the detected apps textbox with current active app."""
         while True:
@@ -126,6 +134,8 @@ class App(ctk.CTk):
                 self.detected_app_list.append(self.detected_app)
                 # Update the textbox from the main thread
                 self.after(0, self.update_active_app)
+                self.category = tracker.check_app(self.detected_app)
+
 
     def update_active_app(self):
         """Updates the textbox content - called from main thread."""
@@ -134,6 +144,7 @@ class App(ctk.CTk):
             self.detected_apps_TB.delete("1.0", "end")
             self.detected_apps_TB.insert("1.0", "\n".join(self.detected_app_list))
             self.detected_apps_TB.configure(state="disabled")
+            self.category_label.configure(text=f"Detected App Category: {self.category}")
 
     def refresh_app_lists(self):
         """Clears existing app list displays and repopulates them from dummy data."""
@@ -184,6 +195,7 @@ class App(ctk.CTk):
         if app_type == "productivity":
             if app_name not in self._dummy_productivity_apps:
                 self._dummy_productivity_apps.append(app_name)
+                save_app.save_app_to_productivity(app_name)
                 self.refresh_app_lists()
                 self.app_name_entry.delete(0, "end")
                 messagebox.showinfo("Success", f"'{app_name}' added to Productivity apps (dummy).")
@@ -192,6 +204,7 @@ class App(ctk.CTk):
         elif app_type == "entertainment":
             if app_name not in self._dummy_entertainment_apps:
                 self._dummy_entertainment_apps.append(app_name)
+                save_app.save_app_to_entertainment(app_name)
                 self.refresh_app_lists()
                 self.app_name_entry.delete(0, "end")
                 messagebox.showinfo("Success", f"'{app_name}' added to Entertainment apps (dummy).")
@@ -206,13 +219,16 @@ class App(ctk.CTk):
         if app_type == "productivity":
             if app_name in self._dummy_productivity_apps:
                 self._dummy_productivity_apps.remove(app_name)
+                save_app.remove_app_from_productivity(app_name)  # Simulate saving removal
                 self.refresh_app_lists()
                 messagebox.showinfo("Success", f"'{app_name}' removed from Productivity apps (dummy).")
+                
             else:
                 messagebox.showerror("Error", f"Could not remove '{app_name}'. It might not be in the list (dummy).")
         elif app_type == "entertainment":
             if app_name in self._dummy_entertainment_apps:
                 self._dummy_entertainment_apps.remove(app_name)
+                save_app.remove_app_from_entertainment(app_name)
                 self.refresh_app_lists()
                 messagebox.showinfo("Success", f"'{app_name}' removed from Entertainment apps (dummy).")
             else:
