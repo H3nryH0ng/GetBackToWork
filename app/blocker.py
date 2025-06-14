@@ -1,129 +1,135 @@
-import os
-import json
-import time # For a small delay for user to read messages
-import tkinter as tk # For creating GUI elements
-from tkinter import messagebox # For showing message boxes
+import time
+import tkinter as tk
+from tkinter import messagebox
+import tkinter.font as tkFont
+from PIL import Image, ImageTk # Import Pillow components for image handling
+import io # Import io to handle image data if needed, but not for file path
+import os # Import os for file path checking
 
-# --- Helper functions for JSON file handling (from previous versions) ---
+# --- IMPORTANT: Configure your image file path here ---
+# The path has been updated to your specified GIF image file.
+# Make sure 'get-back-to-work.gif' is in the same directory as this Python script.
+CUSTOM_POPUP_IMAGE_PATH = "get-back-to-work.gif" # <--- THIS LINE HAS BEEN CHANGED
 
-def _create_initial_json_file(file_path):
+
+# --- Pop-up function ---
+def show_popup(parent_root: tk.Tk, title: str, message: str):
     """
-    Helper function to create an initial, empty JSON file with the expected structure.
+    Displays a custom pop-up window that is at least half the screen size,
+    displaying an image from a specified file.
     """
-    initial_data = {
-        "productivity_app": [],
-        "entertainment_app": []
-    }
+    popup = tk.Toplevel(parent_root)
+    popup.title(title)
+    popup.attributes('-topmost', True)
+    popup.overrideredirect(True)
+    popup.attributes('-alpha', 0.95)
+
+    screen_width = parent_root.winfo_screenwidth()
+    screen_height = parent_root.winfo_screenheight()
+
+    popup_width = int(screen_width * 0.75) # Let's aim for 75% width
+    popup_height = int(screen_height * 0.75) # Let's aim for 75% height
+
+    min_width = 400
+    min_height = 200
+    popup_width = max(popup_width, min_width)
+    popup_height = max(popup_height, min_height)
+
+    # Calculate position to center the popup
+    x_pos = (screen_width // 2) - (popup_width // 2)
+    y_pos = (screen_height // 2) - (popup_height // 2)
+
+    # Set window geometry (WxH+X+Y)
+    popup.geometry(f"{popup_width}x{popup_height}+{x_pos}+{y_pos}")
+    popup.config(bg="red")
+
+    photo_image = None
+    # --- Image Loading from File ---
     try:
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(initial_data, f, indent=4, ensure_ascii=False)
-        print(f"Info: '{file_path}' not found. Created an empty file with initial structure.")
-    except IOError as e:
-        print(f"Error: Could not create '{file_path}'. Reason: {e}")
+        if not os.path.exists(CUSTOM_POPUP_IMAGE_PATH):
+            raise FileNotFoundError(f"Image file not found: {CUSTOM_POPUP_IMAGE_PATH}")
 
-def classify_app_or_website(app_name, categories_file_path="productivity.json"):
-    """
-    Classifies an application or website name as 'Productive' or 'Entertainment'
-    based on keywords found in a specified JSON file (e.g., productivity.json).
-    If the file does not exist, it will be created with an empty structure.
-    """
-    productive_keywords = []
-    entertainment_keywords = []
+        original_image = Image.open(CUSTOM_POPUP_IMAGE_PATH)
 
-    if not os.path.exists(categories_file_path):
-        _create_initial_json_file(categories_file_path)
-    elif os.path.getsize(categories_file_path) == 0:
-        print(f"Warning: '{categories_file_path}' is empty. Initializing its content.")
-        _create_initial_json_file(categories_file_path)
+        # Handle GIF animations if desired (optional: display only first frame or iterate)
+        # For a simple static display, using Image.open() directly is fine as it loads the first frame.
+        # If you need animation, a more complex Tkinter animation loop would be required.
 
-    try:
-        with open(categories_file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            productive_keywords = [kw.lower() for kw in data.get('productivity_app', []) if isinstance(kw, str)]
-            entertainment_keywords = [kw.lower() for kw in data.get('entertainment_app', []) if isinstance(kw, str)]
-    except json.JSONDecodeError:
-        print(f"Error: '{categories_file_path}' is not a valid JSON. Attempting to re-create.")
-        _create_initial_json_file(categories_file_path)
-        return classify_app_or_website(app_name, categories_file_path) # Retry after fix
+        img_width, img_height = original_image.size
+        max_img_width = popup_width - 80
+        max_img_height = popup_height - 150
+
+        width_scale = max_img_width / img_width
+        height_scale = max_img_height / img_height
+        scale_factor = min(width_scale, height_scale)
+
+        new_img_width = int(img_width * scale_factor)
+        new_img_height = int(img_height * scale_factor)
+
+        # Use Image.LANCZOS for high-quality downsampling
+        resized_image = original_image.resize((new_img_width, new_img_height), Image.LANCZOS)
+        photo_image = ImageTk.PhotoImage(resized_image)
+
     except Exception as e:
-        print(f"An error occurred reading '{categories_file_path}': {e}")
-        return "Error"
+        print(f"Error loading or processing image from '{CUSTOM_POPUP_IMAGE_PATH}': {e}")
+        # Fallback to text message if image fails
+        fallback_label = tk.Label(popup, text=message, font=tkFont.Font(family="Helvetica", size=40, weight="bold"),
+                                   fg="white", bg="red", wraplength=popup_width - 40)
+        fallback_label.pack(expand=True, pady=(popup_height * 0.1, popup_height * 0.05))
 
-    app_name_lower = app_name.lower()
+    if photo_image:
+        image_label = tk.Label(popup, image=photo_image, bg="red")
+        image_label.image = photo_image # Keep reference
+        image_label.pack(expand=True, pady=(popup_height * 0.05, popup_height * 0.02)) # Padding
 
-    for keyword in productive_keywords:
-        if keyword in app_name_lower:
-            return "Productive"
+    button_font = tkFont.Font(family="Helvetica", size=18, weight="bold")
+    close_button = tk.Button(popup, text="OK, I'll Get Back To Work!", font=button_font, command=popup.destroy,
+                             bg="white", fg="red", activebackground="lightgray", activeforeground="red",
+                             bd=5, relief="raised")
+    close_button.pack(pady=20)
 
-    for keyword in entertainment_keywords:
-        if keyword in app_name_lower:
-            return "Entertainment"
+    popup.grab_set()
+    parent_root.wait_window(popup)
 
-    return "Unclassified"
 
-# --- New function to show a popup ---
-def show_popup(title: str, message: str):
+def run_continuous_popup_monitor(parent_root: tk.Tk, interval_seconds: int):
     """
-    Displays a simple pop-up message box.
+    Continuously displays a popup at a specified interval using root.after().
     """
-    # Create a Tkinter root window, but keep it hidden
-    root = tk.Tk()
-    root.withdraw() # Hide the main window
+    print(f"Scheduling popup to appear in {interval_seconds} seconds.")
 
-    # Show the message box
-    messagebox.showinfo(title, message)
+    parent_root.after(interval_seconds * 1000, lambda: _show_and_reschedule(parent_root, interval_seconds))
 
-    # Destroy the root window after the message box is closed
-    root.destroy()
-
-def manage_app_usage(app_name_input: str):
+def _show_and_reschedule(parent_root: tk.Tk, interval_seconds: int):
     """
-    Classifies an app/website and, if it's entertainment, displays a pop-up warning.
-
-    Args:
-        app_name_input (str): The user-friendly name of the app/website (e.g., "Netflix", "YouTube").
+    Internal helper to show the popup and then reschedule the next one.
     """
-    print(f"\n--- Analyzing: {app_name_input} ---")
-    classification = classify_app_or_website(app_name_input)
-    print(f"Classification: {classification}")
+    try:
+        # The 'message' parameter here is only used for fallback if image loading fails
+        show_popup(parent_root, "Reminder!", "GET BACK TO WORKK!!")
+    except Exception as e:
+        print(f"An error occurred during popup display: {e}")
+    finally:
+        parent_root.after(interval_seconds * 1000, lambda: _show_and_reschedule(parent_root, interval_seconds))
 
-    if classification == "Entertainment":
-        print(f"'{app_name_input}' is classified as an entertainment app/website. Displaying warning.")
-        show_popup("Warning!", "Get Back To Workk!!")
-    elif classification == "Productive":
-        print(f"'{app_name_input}' is a productive app/website. No action taken.")
-    else: # Unclassified or Error
-        print(f"'{app_name_input}' could not be classified. No action taken.")
 
-# --- Example Usage ---
+# --- Main Execution Block ---
 if __name__ == "__main__":
-    # Ensure 'productivity.json' is set up with your categories.
-    # Example content for productivity.json:
-    # {
-    #     "productivity_app": ["word", "jira", "slack", "code"],
-    #     "entertainment_app": ["netflix", "youtube", "game", "spotify", "discord"]
-    # }
-
-    print("Welcome to the App Usage Manager!")
+    print("Welcome to the Pure Continuous Popup Program!")
+    print("\n--- Setup Guide for Custom Image ---")
+    print("1. **Install 'Pillow'**: If you haven't, open your terminal and run: `pip install Pillow`")
+    print(f"2. **Place your GIF image file**: Put your image file ('get-back-to-work.gif') in the SAME directory as this Python script.")
+    print(f"3. **Update the path**: The `CUSTOM_POPUP_IMAGE_PATH` variable has already been updated to 'get-back-to-work.gif'.")
     print("\n--- Disclaimer ---")
-    print("This program identifies entertainment apps and displays a warning pop-up.")
-    print("It does NOT terminate or block applications from running in the background.")
-    print("------------------")
+    print("This program runs continuously and displays a pop-up reminder at regular intervals.")
+    print("It does NOT detect any specific applications, classify them, or interact with files.")
+    print("The pop-up will appear repeatedly and can be intrusive.")
+    print("Close the Python terminal or press Ctrl+C to stop the monitor.")
+    print("-----------------------------------")
 
-    # Example 1: Entertainment App (should trigger popup)
-    manage_app_usage("Netflix binge-watching")
-    time.sleep(1) # Small delay
+    root = tk.Tk()
+    root.withdraw()
 
-    # Example 2: Another entertainment app (should trigger popup)
-    manage_app_usage("YouTube Videos")
-    time.sleep(1)
+    run_continuous_popup_monitor(root, interval_seconds=2) # Popup every 2 seconds
 
-    # Example 3: Productive App (no popup)
-    manage_app_usage("Microsoft Word Document")
-    time.sleep(1)
-
-    # Example 4: Unclassified App (no popup)
-    manage_app_usage("My New Project App")
-    time.sleep(1)
-
-    input("\nPress Enter to exit.")
+    root.mainloop()
