@@ -4,6 +4,11 @@ import customtkinter
 import tkinter as tk
 from tkinter import messagebox
 
+import tracker
+import threading
+
+import time
+
 # For now, we will NOT import config_manager as requested.
 # The functions below will use placeholder logic instead of real data persistence.
 # from config_manager import (
@@ -14,6 +19,10 @@ from tkinter import messagebox
 # )
 
 # --- Global Variables for GUI Elements ---
+
+detected_app = ""
+detected_app_list = []
+
 # These will hold references to widgets that need to be updated from various parts of the app.
 points_label = None
 status_indicator_label = None
@@ -90,6 +99,11 @@ def create_dashboard_tab(tab_frame):
                                           font=customtkinter.CTkFont(size=48, weight="bold"), text_color="#FFD700")
     points_label.grid(row=1, column=0, pady=(0, 10), padx=20, sticky="ew")
 
+    # A Textbox to show all detected apps
+    global detected_apps_TB
+    detected_apps_TB = customtkinter.CTkTextbox(tab_frame, height=100, width=400, state="disabled")
+    detected_apps_TB.pack()
+
     # Monitoring Status Indicator
     status_frame = customtkinter.CTkFrame(tab_frame)
     status_frame.pack(pady=10, padx=20, fill="x")
@@ -140,6 +154,20 @@ def create_dashboard_tab(tab_frame):
     redeem_button = customtkinter.CTkButton(tab_frame, text="Redeem Points", font=customtkinter.CTkFont(size=16, weight="bold"), command=lambda: switch_tab_to_redeem_points(tab_frame.master.master))
     redeem_button.pack(pady=(0, 20), padx=20)
 
+
+def update_active_app_TB():
+    global detected_apps_TB, detected_app, detected_app_list
+    def update():
+        while True:
+            time.sleep(1)
+            detected_app = tracker.get_active_app()
+            if detected_app:
+                detected_app_list.append(detected_app)
+            if detected_app_list:
+                detected_apps_TB.configure(text="")
+                for app in detected_app_list:
+                    detected_apps_TB.configure(text=app)
+    threading.Thread(target=update, daemon=True).start()
 
 # --- App Management Tab Functions (UI Only for now) ---
 
@@ -359,7 +387,6 @@ def create_point_redemption_tab(tab_frame):
     redeem_current_points_frame.columnconfigure(0, weight=1)
     customtkinter.CTkLabel(redeem_current_points_frame, text="Your Current Points:", font=customtkinter.CTkFont(size=16)).grid(row=0, column=0, sticky="w", padx=20, pady=5)
     customtkinter.CTkLabel(redeem_current_points_frame, text=str(_dummy_current_points), font=customtkinter.CTkFont(size=28, weight="bold"), text_color="#FFD700").grid(row=0, column=1, sticky="e", padx=20, pady=5)
-
 
     # Redemption input section
     input_frame = customtkinter.CTkFrame(tab_frame)
