@@ -83,23 +83,64 @@ def save_app_to_entertainment(app_name: str):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+def remove_app_from_productivity(app_name: str):
+    """
+    Removes an application name from the 'productivity_app' list in 'productivity.json'.
+    If the key does not exist or the app is not found, it will do nothing.
+    """
+    file_path = "productivity.json"
+    existing_data = _read_json_file(file_path)
+
+    if 'productivity_app' in existing_data:
+        app_list = existing_data['productivity_app']
+        if app_name in app_list:
+            app_list.remove(app_name)
+            existing_data['productivity_app'] = app_list
+            _write_json_file(file_path, existing_data)
+            print(f"'{app_name}' removed from productivity apps.")
+        else:
+            print(f"'{app_name}' not found in productivity apps.")
+    else:
+        print("No productivity apps found to remove.")
+
+def remove_app_from_entertainment(app_name: str):
+    """
+    Removes an application name from the 'productivity_app' list in 'productivity.json'.
+    If the key does not exist or the app is not found, it will do nothing.
+    """
+    file_path = "productivity.json"
+    existing_data = _read_json_file(file_path)
+
+    if 'entertainment_app' in existing_data:
+        app_list = existing_data['entertainment_app']
+        if app_name in app_list:
+            app_list.remove(app_name)
+            existing_data['entertainment_app'] = app_list
+            _write_json_file(file_path, existing_data)
+            print(f"'{app_name}' removed from entertainment apps.")
+        else:
+            print(f"'{app_name}' not found in entertainment apps.")
+    else:
+        print("No entertainment apps found to remove.")
 # --- Example Usage ---
 # Ensure productivity.json is empty or doesn't exist for a clean start
 # if os.path.exists("productivity.json"):
 #     os.remove("productivity.json")
 
-print("--- Adding Productivity Apps ---")
-save_app_to_productivity("VS Code")
-save_app_to_productivity("Google Chrome")
-save_app_to_productivity("Jira")
-save_app_to_productivity("Google Chrome") # This won't add a duplicate
+# print("--- Adding Productivity Apps ---")
+# save_app_to_productivity("VS Code")
+# save_app_to_productivity("Google Chrome")
+# save_app_to_productivity("Jira")
+# save_app_to_productivity("Google Chrome") # This won't add a duplicate
 
-print("\n--- Adding Entertainment Apps ---")
-save_app_to_entertainment("YouTube")
-save_app_to_entertainment("Netflix")
-save_app_to_entertainment("Spotify")
-save_app_to_entertainment("YouTube") # This won't add a duplicate
+# print("\n--- Adding Entertainment Apps ---")
+# save_app_to_entertainment("YouTube")
+# save_app_to_entertainment("Netflix")
+# save_app_to_entertainment("Spotify")
+# save_app_to_entertainment("YouTube") # This won't add a duplicate
 
+# remove_app_from_productivity("Google Chrome") # Remove an app from productivity
+# remove_app_from_productivity("Jira")
 print("\n--- Current productivity.json content ---")
 try:
     with open("productivity.json", 'r', encoding='utf-8') as f:
