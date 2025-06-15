@@ -54,11 +54,14 @@ def check_app(app_name):
         current_points += points_change
     elif category == "Entertainment":
         if difficulty == "chill":
-            points_change = 0  # No point deduction in chill mode
+            points_change = -1  # No point deduction in chill mode
         elif difficulty == "medium":
             points_change = -5  # -5 points per second
         else:  # productive_guru
             points_change = -10  # -10 points per second
+
+        if current_points <= 0:
+            blocker.show_popup("Reminder!", "GET BACK TO WORKK!!")
         current_points = max(0, current_points + points_change)  # Ensure points don't go below 0
 
     # Save updated points
