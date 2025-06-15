@@ -6,10 +6,14 @@ import threading
 import json
 import save_app
 import random
+import os
 
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        # Initialize required JSON files
+        self._initialize_json_files()
 
         # Configure window
         self.title("GetB@ck2Work")
@@ -99,6 +103,25 @@ class App(ctk.CTk):
 
         # Start background thread
         threading.Thread(target=self.update_active_app_TB, daemon=True).start()
+
+    def _initialize_json_files(self):
+        """Initialize required JSON files if they don't exist."""
+        # Initialize productivity.json
+        if not os.path.exists("productivity.json"):
+            initial_productivity_data = {
+                "productivity_app": [],
+                "entertainment_app": []
+            }
+            with open("productivity.json", 'w') as f:
+                json.dump(initial_productivity_data, f, indent=4)
+
+        # Initialize points.json
+        if not os.path.exists("points.json"):
+            initial_points_data = {
+                "points": 0
+            }
+            with open("points.json", 'w') as f:
+                json.dump(initial_points_data, f, indent=4)
 
     def switch_tab_to_redeem_points(self):
         """Helper function to switch the tab to 'Point Redemption'."""
