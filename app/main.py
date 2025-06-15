@@ -171,7 +171,7 @@ class App(ctk.CTk):
         while True:
             time.sleep(1)
             self.detected_app = tracker.get_active_app()
-            if (self.detected_app) and (self.detected_app != "python.exe"):
+            if (self.detected_app) and (self.detected_app != "python.exe") and  (self.detected_app != "python3.12.exe") :
                 self.detected_app_list.append(self.detected_app)
                 # Update the textbox from the main thread
                 self.after(0, self.update_active_app)
