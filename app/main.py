@@ -23,6 +23,10 @@ class App(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
+        # Initialize difficulty level
+        self.difficulty_level = "chill"  # Default difficulty
+        self._load_difficulty_settings()
+
         # --- Initialize dummy data ---
         with open("productivity.json", 'r') as file:
             data = json.load(file) # Use json.load() for file objects
@@ -45,7 +49,6 @@ class App(ctk.CTk):
         # Initialize detected app variables
         self.detected_app = ""
         self.detected_app_list = []
-
 
         self.outcomes = [
             ("🎯", "Extra Focus Points!", "give_points"),
@@ -92,6 +95,7 @@ class App(ctk.CTk):
         self.dashboard_tab = self.tabview.add("Dashboard")
         self.app_management_tab = self.tabview.add("App Management")
         self.mini_game_tab = self.tabview.add("Mini Game")
+        self.settings_tab = self.tabview.add("Settings")  # New settings tab
 
         # Set default tab
         self.tabview.set("Dashboard")
@@ -100,6 +104,7 @@ class App(ctk.CTk):
         self.create_dashboard_tab()
         self.create_app_management_tab()
         self.create_mini_game_tab()
+        self.create_settings_tab()  # Create settings tab
 
         # Start background thread
         threading.Thread(target=self.update_active_app_TB, daemon=True).start()
@@ -122,6 +127,147 @@ class App(ctk.CTk):
             }
             with open("points.json", 'w') as f:
                 json.dump(initial_points_data, f, indent=4)
+
+    def _load_difficulty_settings(self):
+        """Load difficulty settings from settings.json"""
+        try:
+            with open("settings.json", 'r') as f:
+                settings = json.load(f)
+                self.difficulty_level = settings.get("difficulty_level", "chill")
+        except (FileNotFoundError, json.JSONDecodeError):
+            # If file doesn't exist or is invalid, create it with default settings
+            self._save_difficulty_settings()
+
+    def _save_difficulty_settings(self):
+        """Save difficulty settings to settings.json"""
+        settings = {
+            "difficulty_level": self.difficulty_level
+        }
+        with open("settings.json", 'w') as f:
+            json.dump(settings, f, indent=4)
+
+    def create_settings_tab(self):
+        """Create the settings tab with difficulty level options"""
+        # Create main frame
+        settings_frame = ctk.CTkFrame(self.settings_tab)
+        settings_frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+        # Title
+        title_label = ctk.CTkLabel(
+            settings_frame,
+            text="Difficulty Settings",
+            font=ctk.CTkFont(size=24, weight="bold")
+        )
+        title_label.pack(pady=(20, 30))
+
+        # Difficulty level selection
+        difficulty_frame = ctk.CTkFrame(settings_frame)
+        difficulty_frame.pack(padx=20, pady=10, fill="x")
+
+        ctk.CTkLabel(
+            difficulty_frame,
+            text="Select Difficulty Level:",
+            font=ctk.CTkFont(size=16)
+        ).pack(pady=(10, 5))
+
+        # Create radio buttons for difficulty levels
+        self.difficulty_var = ctk.StringVar(value=self.difficulty_level)
+        
+        def on_difficulty_change():
+            # Show confirmation popup
+            confirm_window = ctk.CTkToplevel(self)
+            confirm_window.title("Confirm Difficulty Change")
+            confirm_window.geometry("400x200")
+            confirm_window.transient(self)
+            confirm_window.grab_set()
+            
+            # Make popup stay on top
+            confirm_window.attributes('-topmost', True)
+            
+            # Add message
+            message = ctk.CTkLabel(
+                confirm_window,
+                text=f"Are you sure you want to change the difficulty to {self.difficulty_var.get().title()}?\n\nThis will reset your current points to 0.",
+                font=ctk.CTkFont(size=14),
+                wraplength=350
+            )
+            message.pack(pady=20)
+            
+            # Add buttons
+            button_frame = ctk.CTkFrame(confirm_window)
+            button_frame.pack(pady=20)
+            
+            def apply_changes():
+                self.difficulty_level = self.difficulty_var.get()
+                self._save_difficulty_settings()
+                # Reset points when changing difficulty
+                self._dummy_current_points = 0
+                with open("points.json", 'w') as file:
+                    json.dump({"points": 0}, file, indent=4)
+                self.points_label.configure(text="0")
+                confirm_window.destroy()
+            
+            def cancel_changes():
+                # Reset radio button to previous value
+                self.difficulty_var.set(self.difficulty_level)
+                confirm_window.destroy()
+            
+            cancel_button = ctk.CTkButton(
+                button_frame,
+                text="Cancel",
+                command=cancel_changes,
+                fg_color="#FF5555",
+                hover_color="#FF3333"
+            )
+            cancel_button.pack(side="left", padx=10)
+            
+            confirm_button = ctk.CTkButton(
+                button_frame,
+                text="Confirm Change",
+                command=apply_changes,
+                fg_color="#55FF55",
+                hover_color="#33FF33"
+            )
+            confirm_button.pack(side="left", padx=10)
+            
+            # Center the window
+            confirm_window.update_idletasks()
+            width = confirm_window.winfo_width()
+            height = confirm_window.winfo_height()
+            x = (confirm_window.winfo_screenwidth() // 2) - (width // 2)
+            y = (confirm_window.winfo_screenheight() // 2) - (height // 2)
+            confirm_window.geometry(f'{width}x{height}+{x}+{y}')
+
+        difficulties = [
+            ("Chill Mode", "chill", 
+             "• 1 point per second on productive apps\n• No point deduction for entertainment apps\n• Perfect for beginners"),
+            ("Medium Mode", "medium", 
+             "• 1 point per 5 seconds on productive apps\n• -5 points per second on entertainment apps\n• Balanced challenge"),
+            ("Productive Guru", "productive_guru", 
+             "• 1 point per 10 seconds on productive apps\n• -10 points per second on entertainment apps\n• Strict monitoring with popup reminders")
+        ]
+
+        for text, value, description in difficulties:
+            frame = ctk.CTkFrame(difficulty_frame)
+            frame.pack(padx=20, pady=5, fill="x")
+            
+            radio = ctk.CTkRadioButton(
+                frame,
+                text=text,
+                variable=self.difficulty_var,
+                value=value,
+                command=on_difficulty_change
+            )
+            radio.pack(side="left", padx=10)
+            
+            desc_label = ctk.CTkLabel(
+                frame,
+                text=description,
+                font=ctk.CTkFont(size=12),
+                text_color="gray",
+                justify="left"
+            )
+            desc_label.pack(side="left", padx=10, fill="x", expand=True)
 
     def switch_tab_to_redeem_points(self):
         """Helper function to switch the tab to 'Point Redemption'."""
@@ -199,11 +345,16 @@ class App(ctk.CTk):
                 # Update the textbox from the main thread
                 self.after(0, self.update_active_app)
                 self.category = tracker.check_app(self.detected_app)
+                
+                # Check if we should show popup based on difficulty level
+                if self.difficulty_level == "productive_guru" and self.category == "Entertainment":
+                    self.show_productivity_popup()
+                
                 with open("points.json", 'r') as file:
                     points_data = json.load(file)
-                    self._dummy_current_points = points_data.get("points", "")
-                    self.points_label.configure(text=self._dummy_current_points)
-                
+                    self._dummy_current_points = points_data.get("points", 0)
+                    # Display points as integer
+                    self.points_label.configure(text=str(int(self._dummy_current_points)))
 
     def update_active_app(self):
         """Updates the textbox content - called from main thread."""
@@ -400,7 +551,6 @@ class App(ctk.CTk):
 
         self.update_spin_button()
 
-
     def spin(self):
         if self._dummy_current_points >= 10:
             # Deduct points immediately
@@ -410,7 +560,6 @@ class App(ctk.CTk):
             # Disable spin button while spinning
             self.spin_button.configure(state='disabled')
             self.animate_slots()
-
 
     def animate_slots(self, iteration=0):
         if iteration < 20:
@@ -438,46 +587,87 @@ class App(ctk.CTk):
         else:
             self.spin_button.configure(state='normal')
 
-
     # Outcome handlers (cleaned, no button state management inside these)
     def give_points(self):
         points = random.randint(20, 50)
         self.add_points(points)
         self.result_label.configure(text=f"{self.result_label.cget('text')}\nYou won {points} points!")
 
-
     def show_tip(self):
         tip = random.choice(self.tips)
         self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nProductivity Tip:\n{tip}")
 
-
     def show_dare(self):
         dare = random.choice(self.dares)
         self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nYour Dare:\n{dare}")
-
 
     def lose_all_points(self):
         points_lost = self._dummy_current_points
         self._dummy_current_points = 0
         self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nYou lost all {points_lost} points!")
 
-
     # Points utility functions
     def add_points(self, amount):
         self._dummy_current_points += amount
-
 
     def deduct_points(self, amount):
         self._dummy_current_points = max(0, self._dummy_current_points - amount)
 
     def update_points_display(self):
-        self.points_label.configure(text=self._dummy_current_points)
+        """Update points display in all relevant places"""
+        # Display points as integer
+        self.points_label.configure(text=str(int(self._dummy_current_points)))
         if hasattr(self, 'casino_points_label'):
-            self.casino_points_label.configure(text=f"Current Points: {self._dummy_current_points}")
-        new_data = {"points": self._dummy_current_points}
+            self.casino_points_label.configure(text=f"Current Points: {int(self._dummy_current_points)}")
+        new_data = {"points": int(self._dummy_current_points)}
         with open("points.json", 'w') as file:
             json.dump(new_data, file, indent=4)
 
+    def show_productivity_popup(self):
+        """Show a productivity reminder popup"""
+        popup = ctk.CTkToplevel(self)
+        popup.title("Productivity Reminder")
+        popup.geometry("400x200")
+        
+        # Make popup stay on top
+        popup.attributes('-topmost', True)
+        
+        # Add message
+        message = ctk.CTkLabel(
+            popup,
+            text="Are you sure you want to continue with this entertainment app?\n\nRemember your productivity goals!",
+            font=ctk.CTkFont(size=14),
+            wraplength=350
+        )
+        message.pack(pady=20)
+        
+        # Add buttons
+        button_frame = ctk.CTkFrame(popup)
+        button_frame.pack(pady=20)
+        
+        def close_popup():
+            popup.destroy()
+        
+        continue_button = ctk.CTkButton(
+            button_frame,
+            text="Continue Anyway",
+            command=close_popup,
+            fg_color="#FF5555",
+            hover_color="#FF3333"
+        )
+        continue_button.pack(side="left", padx=10)
+        
+        switch_button = ctk.CTkButton(
+            button_frame,
+            text="Switch to Productive App",
+            command=close_popup,
+            fg_color="#55FF55",
+            hover_color="#33FF33"
+        )
+        switch_button.pack(side="left", padx=10)
+        
+        # Schedule popup to close after 10 seconds
+        popup.after(10000, close_popup)
 
 if __name__ == "__main__":
     app = App()
