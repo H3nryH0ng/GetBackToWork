@@ -31,5 +31,24 @@ def check_app(app_name):
         json.dump(data, file, indent=2)
         return category
 
+def get_all_app_list():
+    app_list = []
+    ignored_list = ["TextInputHost.exe", "explorer.exe"]
+    for process in psutil.process_iter(['pid', 'name']):
+        pid = process.info['pid']
+
+        def enumWindowsArguments(handle, __):
+            _, foundPID = win32process.GetWindowThreadProcessId(handle)
+
+            if foundPID == pid and win32gui.IsWindowVisible(handle):
+                process_name = process.info["name"]
+                if process_name and (process_name not in ignored_list):
+                    app_name = process_name # Get all active app name
+                    if app_name not in app_list:
+                        app_list.append(app_name)
+
+        win32gui.EnumWindows(enumWindowsArguments, None)
+    return app_list
+
 if __name__ == "__main__":
     check_app("steamwebhelper.exe")

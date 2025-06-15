@@ -41,6 +41,7 @@ class App(ctk.CTk):
         # Initialize detected app variables
         self.detected_app = ""
         self.detected_app_list = []
+        self.all_app_list = tracker.get_all_app_list()
 
         self.outcomes = [
             ("🎯", "Extra Focus Points!", "give_points"),
@@ -227,9 +228,16 @@ class App(ctk.CTk):
         else:
             ctk.CTkLabel(self.entertainment_app_list_frame, text="No entertainment apps added yet.").pack(pady=10)
 
+    def refresh_dropdown(self):
+        self.all_app_list = tracker.get_all_app_list()
+        self.choose_app_dropdown.configure(values=self.all_app_list)
+
     def add_app_gui(self):
         """Handles adding a new app from the GUI input fields using dummy data."""
-        app_name = self.app_name_entry.get().strip()
+        if self.app_name_entry.get().strip():
+            app_name = self.app_name_entry.get().strip()
+        else:
+            app_name = self.choose_app_dropdown.get().strip()
         app_type = self.app_type_optionmenu.get().lower()
 
         if not app_name:
@@ -292,8 +300,14 @@ class App(ctk.CTk):
                     font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
 
         ctk.CTkLabel(add_app_frame, text="Application Name/Window Title:").pack(pady=(10, 0), padx=20, anchor="w")
-        self.app_name_entry = ctk.CTkEntry(add_app_frame, placeholder_text="e.g., VS Code, Google Chrome")
+        self.app_name_entry = ctk.CTkEntry(add_app_frame)
         self.app_name_entry.pack(pady=(0, 10), padx=20, fill="x")
+
+        self.choose_app_dropdown = ctk.CTkComboBox(add_app_frame, values=self.all_app_list)
+        self.choose_app_dropdown.pack(pady=(0, 10), padx=20, fill="x")
+
+        self.refresh_dropdown = ctk.CTkButton(add_app_frame, text="Refresh", command=self.refresh_dropdown)
+        self.refresh_dropdown.pack(pady=(0, 10), padx=20, fill="x")
 
         ctk.CTkLabel(add_app_frame, text="Category:").pack(pady=(10, 0), padx=20, anchor="w")
         self.app_type_optionmenu = ctk.CTkOptionMenu(add_app_frame, values=["Productivity", "Entertainment"])
