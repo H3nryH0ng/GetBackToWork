@@ -30,25 +30,26 @@ class App(ctk.CTk):
         # --- Initialize dummy data ---
         with open("productivity.json", 'r') as file:
             data = json.load(file) # Use json.load() for file objects
-            self._dummy_productivity_apps = data.get("productivity_app", [])
-            self._dummy_entertainment_apps = data.get("entertainment_app", [])
+            self.productivity_apps = data.get("productivity_app", [])
+            self.entertainment_apps = data.get("entertainment_app", [])
 
         with open("points.json", 'r') as file:
             points_data = json.load(file)
-            self._dummy_current_points = points_data.get("points", "")
+            self.current_points = points_data.get("points", "")
 
-        self._dummy_points_per_minute_entertainment = 2
-        self._dummy_productive_points_per_minute = 1
-        self._dummy_entertainment_points_per_minute = 0
-        self._dummy_monitoring_interval_seconds = 5
-        self._dummy_start_on_startup = False
-        self._dummy_appearance_mode = "System"
-        self._dummy_color_theme = "blue"
+        self.points_per_minute_entertainment = 2
+        self.productive_points_per_minute = 1
+        self.entertainment_points_per_minute = 0
+        self.monitoring_interval_seconds = 5
+        self.start_on_startup = False
+        self.appearance_mode = "System"
+        self.color_theme = "blue"
         self.category = "Unclassified"
 
         # Initialize detected app variables
         self.detected_app = ""
         self.detected_app_list = []
+        self.all_app_list = tracker.get_all_app_list()
 
         self.outcomes = [
             ("🎯", "Extra Focus Points!", "give_points"),
@@ -84,8 +85,8 @@ class App(ctk.CTk):
         ]
 
         # Set initial appearance
-        ctk.set_appearance_mode(self._dummy_appearance_mode)
-        ctk.set_default_color_theme(self._dummy_color_theme)
+        ctk.set_appearance_mode(self.appearance_mode)
+        ctk.set_default_color_theme(self.color_theme)
 
         # Create tabview
         self.tabview = ctk.CTkTabview(self, width=500, height=300)
@@ -274,7 +275,7 @@ class App(ctk.CTk):
         self.tabview.set("Point Redemption")
         print("Switched to Point Redemption tab.")
         if hasattr(self, 'points_label'):
-            self.points_label.configure(text=str(self._dummy_current_points))
+            self.points_label.configure(text=str(self.current_points))
 
     def create_dashboard_tab(self):
         """Populates the Dashboard tab with suggested GUI elements."""
@@ -293,7 +294,7 @@ class App(ctk.CTk):
                                             text_color=("gray10", "gray90"))
         self.points_text_label.grid(row=0, column=0, pady=(30, 5))
         
-        self.points_label = ctk.CTkLabel(self.points_frame, text=str(self._dummy_current_points),
+        self.points_label = ctk.CTkLabel(self.points_frame, text=str(self.current_points),
                                     font=ctk.CTkFont(size=56, weight="bold"),
                                     text_color=("#1f538d", "#4a9eff"))
         self.points_label.grid(row=1, column=0, pady=(0, 30))
@@ -340,7 +341,7 @@ class App(ctk.CTk):
         while True:
             time.sleep(1)
             self.detected_app = tracker.get_active_app()
-            if (self.detected_app) and (self.detected_app != "python.exe"):
+            if (self.detected_app) and (self.detected_app != "python.exe") and  (self.detected_app != "python3.12.exe") :
                 self.detected_app_list.append(self.detected_app)
                 # Update the textbox from the main thread
                 self.after(0, self.update_active_app)
@@ -352,9 +353,9 @@ class App(ctk.CTk):
                 
                 with open("points.json", 'r') as file:
                     points_data = json.load(file)
-                    self._dummy_current_points = points_data.get("points", 0)
-                    # Display points as integer
-                    self.points_label.configure(text=str(int(self._dummy_current_points)))
+                    self.current_points = points_data.get("points", "")
+                    self.points_label.configure(text=self.current_points)
+                
 
     def update_active_app(self):
         """Updates the textbox content - called from main thread."""
@@ -372,8 +373,8 @@ class App(ctk.CTk):
         for widget in self.entertainment_app_list_frame.winfo_children():
             widget.destroy()
 
-        if self._dummy_productivity_apps:
-            for app_name in self._dummy_productivity_apps:
+        if self.productivity_apps:
+            for app_name in self.productivity_apps:
                 app_label_frame = ctk.CTkFrame(self.productivity_app_list_frame, fg_color="transparent")
                 app_label_frame.pack(fill="x", pady=2, padx=5)
                 app_label_frame.columnconfigure(0, weight=1)
@@ -387,8 +388,8 @@ class App(ctk.CTk):
         else:
             ctk.CTkLabel(self.productivity_app_list_frame, text="No productivity apps added yet.").pack(pady=10)
 
-        if self._dummy_entertainment_apps:
-            for app_name in self._dummy_entertainment_apps:
+        if self.entertainment_apps:
+            for app_name in self.entertainment_apps:
                 app_label_frame = ctk.CTkFrame(self.entertainment_app_list_frame, fg_color="transparent")
                 app_label_frame.pack(fill="x", pady=2, padx=5)
                 app_label_frame.columnconfigure(0, weight=1)
@@ -402,9 +403,16 @@ class App(ctk.CTk):
         else:
             ctk.CTkLabel(self.entertainment_app_list_frame, text="No entertainment apps added yet.").pack(pady=10)
 
+    def refresh_dropdown(self):
+        self.all_app_list = tracker.get_all_app_list()
+        self.choose_app_dropdown.configure(values=self.all_app_list)
+
     def add_app_gui(self):
         """Handles adding a new app from the GUI input fields using dummy data."""
-        app_name = self.app_name_entry.get().strip()
+        if self.app_name_entry.get().strip():
+            app_name = self.app_name_entry.get().strip()
+        else:
+            app_name = self.choose_app_dropdown.get().strip()
         app_type = self.app_type_optionmenu.get().lower()
 
         if not app_name:
@@ -412,8 +420,8 @@ class App(ctk.CTk):
             return
 
         if app_type == "productivity":
-            if app_name not in self._dummy_productivity_apps:
-                self._dummy_productivity_apps.append(app_name)
+            if app_name not in self.productivity_apps:
+                self.productivity_apps.append(app_name)
                 save_app.save_app_to_productivity(app_name)
                 self.refresh_app_lists()
                 self.app_name_entry.delete(0, "end")
@@ -421,8 +429,8 @@ class App(ctk.CTk):
             else:
                 messagebox.showwarning("Already Exists", f"'{app_name}' is already in the Productivity list (dummy).")
         elif app_type == "entertainment":
-            if app_name not in self._dummy_entertainment_apps:
-                self._dummy_entertainment_apps.append(app_name)
+            if app_name not in self.entertainment_apps:
+                self.entertainment_apps.append(app_name)
                 save_app.save_app_to_entertainment(app_name)
                 self.refresh_app_lists()
                 self.app_name_entry.delete(0, "end")
@@ -436,8 +444,8 @@ class App(ctk.CTk):
             return
 
         if app_type == "productivity":
-            if app_name in self._dummy_productivity_apps:
-                self._dummy_productivity_apps.remove(app_name)
+            if app_name in self.productivity_apps:
+                self.productivity_apps.remove(app_name)
                 save_app.remove_app_from_productivity(app_name)  # Simulate saving removal
                 self.refresh_app_lists()
                 messagebox.showinfo("Success", f"'{app_name}' removed from Productivity apps (dummy).")
@@ -445,8 +453,8 @@ class App(ctk.CTk):
             else:
                 messagebox.showerror("Error", f"Could not remove '{app_name}'. It might not be in the list (dummy).")
         elif app_type == "entertainment":
-            if app_name in self._dummy_entertainment_apps:
-                self._dummy_entertainment_apps.remove(app_name)
+            if app_name in self.entertainment_apps:
+                self.entertainment_apps.remove(app_name)
                 save_app.remove_app_from_entertainment(app_name)
                 self.refresh_app_lists()
                 messagebox.showinfo("Success", f"'{app_name}' removed from Entertainment apps (dummy).")
@@ -467,8 +475,14 @@ class App(ctk.CTk):
                     font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
 
         ctk.CTkLabel(add_app_frame, text="Application Name/Window Title:").pack(pady=(10, 0), padx=20, anchor="w")
-        self.app_name_entry = ctk.CTkEntry(add_app_frame, placeholder_text="e.g., VS Code, Google Chrome")
+        self.app_name_entry = ctk.CTkEntry(add_app_frame)
         self.app_name_entry.pack(pady=(0, 10), padx=20, fill="x")
+
+        self.choose_app_dropdown = ctk.CTkComboBox(add_app_frame, values=self.all_app_list)
+        self.choose_app_dropdown.pack(pady=(0, 10), padx=20, fill="x")
+
+        self.refresh_dropdown = ctk.CTkButton(add_app_frame, text="Refresh", command=self.refresh_dropdown)
+        self.refresh_dropdown.pack(pady=(0, 10), padx=20, fill="x")
 
         ctk.CTkLabel(add_app_frame, text="Category:").pack(pady=(10, 0), padx=20, anchor="w")
         self.app_type_optionmenu = ctk.CTkOptionMenu(add_app_frame, values=["Productivity", "Entertainment"])
@@ -523,7 +537,7 @@ class App(ctk.CTk):
         self.casino_window.grab_set()
 
         self.casino_points_label = ctk.CTkLabel(self.casino_window,
-                                                text=f"Current Points: {self._dummy_current_points}",
+                                                text=f"Current Points: {self.current_points}",
                                                 text_color="white",
                                                 font=ctk.CTkFont(size=18, weight="bold"))
         self.casino_points_label.pack(pady=20)
@@ -552,7 +566,7 @@ class App(ctk.CTk):
         self.update_spin_button()
 
     def spin(self):
-        if self._dummy_current_points >= 10:
+        if self.current_points >= 10:
             # Deduct points immediately
             self.deduct_points(10)
             self.update_points_display()
@@ -582,7 +596,7 @@ class App(ctk.CTk):
             self.update_spin_button()
 
     def update_spin_button(self):
-        if self._dummy_current_points < 10:
+        if self.current_points < 10:
             self.spin_button.configure(state='disabled')
         else:
             self.spin_button.configure(state='normal')
@@ -602,24 +616,23 @@ class App(ctk.CTk):
         self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nYour Dare:\n{dare}")
 
     def lose_all_points(self):
-        points_lost = self._dummy_current_points
-        self._dummy_current_points = 0
+        points_lost = self.current_points
+        self.current_points = 0
         self.result_label.configure(text=f"{self.result_label.cget('text')}\n\nYou lost all {points_lost} points!")
 
     # Points utility functions
     def add_points(self, amount):
-        self._dummy_current_points += amount
+        self.current_points += amount
+
 
     def deduct_points(self, amount):
-        self._dummy_current_points = max(0, self._dummy_current_points - amount)
+        self.current_points = max(0, self.current_points - amount)
 
     def update_points_display(self):
-        """Update points display in all relevant places"""
-        # Display points as integer
-        self.points_label.configure(text=str(int(self._dummy_current_points)))
+        self.points_label.configure(text=self.current_points)
         if hasattr(self, 'casino_points_label'):
-            self.casino_points_label.configure(text=f"Current Points: {int(self._dummy_current_points)}")
-        new_data = {"points": int(self._dummy_current_points)}
+            self.casino_points_label.configure(text=f"Current Points: {self.current_points}")
+        new_data = {"points": self.current_points}
         with open("points.json", 'w') as file:
             json.dump(new_data, file, indent=4)
 
